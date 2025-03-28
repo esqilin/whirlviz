@@ -1,0 +1,129 @@
+
+/* ******************************************************************* */
+/* Section: Header Styles */
+/* ******************************************************************* */
+
+:root {
+    --primary-color: #FFF3E0;    /* Very Light Cream */
+    --secondary-color: #512DA8;  /* Deep Purple */
+    --accent-color: #00897B;     /* Teal */
+    --background-color: #FFB300; /* Bright Amber */
+    --text-color: #0288D1;       /* Strong Blue */
+  
+    /* Optional: Darker text for better contrast */
+    --dark-text: #333;
+
+    /* Slightly darker shade of Pastel Peach for slider track */
+    --slider-track-color: var(--accent-color);
+}
+
+/* ******************************************************************* */
+/* Section: Main Content Styles */
+/* ******************************************************************* */
+
+body {
+    background-color: var(--background-color);
+    color: var(--dark-text); /* Use the optional dark text for better readability */
+}
+
+.button {
+    background-color: var(--accent-color);
+    border: 1px solid var(--primary-color);
+    color: var(--dark-text);
+}
+
+h1 {
+    color: var(--secondary-color);
+}
+
+.minty {
+    background-color: var(--accent-color);
+}
+
+canvas {
+    width: 800px;
+    height: 400px;
+    border: 1px solid black;
+}
+
+/* ******************************************************************* */
+/* Section: Controls Styles */
+/* ******************************************************************* */
+
+.button {
+    background-color: var(--accent-color); /* Pastel Mint */
+    border: 1px solid var(--primary-color); /* Pastel Pink */
+    color: var(--dark-text); /* Dark text for readability */
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease; /* Smooth transition on hover */
+}
+  
+.button:hover {
+    background-color: var(--background-color); /* Pastel Peach on hover */
+}
+  
+.button:active {
+    background-color: var(--secondary-color); /* Pastel Lavender on active */
+}
+
+/* Basic Slider Styles */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 200px;
+    height: 10px;
+    background: var(--background-color); /* Pastel Peach */
+    border-radius: 5px;
+    outline: none;
+    margin: 10px 0;
+}
+
+/* Thumb Styles */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-color); /* Pastel Mint */
+    border: 2px solid var(--primary-color); /* Pastel Pink */
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--accent-color);
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Track Styles (Slightly Darker Background) */
+input[type="range"]::-webkit-slider-runnable-track {
+    background: var(--slider-track-color); /* Use the new variable */
+    border: none;
+    border-radius: 5px;
+    height: 10px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: var(--slider-track-color); /* Use the new variable */
+    border: none;
+    border-radius: 5px;
+    height: 10px;
+}
+
+/* Focus Styles (optional) */
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}

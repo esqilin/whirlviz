@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Eleventy
+dist/
+.cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Other
+.env
+*.log
+*.swp # Vim swap files
+*.swo # Vim swap files
+
