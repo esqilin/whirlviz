@@ -5,6 +5,10 @@ module.exports = function(eleventyConfig) {
 
     eleventyConfig.addWatchTarget("src/layouts");
 
+    eleventyConfig.setServerOptions({
+        port: 9773,
+    });
+
     return {
         dir: {
             input: "src",
