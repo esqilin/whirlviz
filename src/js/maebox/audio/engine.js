@@ -27,6 +27,13 @@ class Engine {
     /**
      * @param {number} val
      */
+    set gain(val) {
+        this.#gain.gain = val;
+    }
+
+    /**
+     * @param {number} val
+     */
     set vol(val) {
         this.#volume.gain = val;
     }

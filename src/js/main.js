@@ -8,6 +8,7 @@ import * as maebox from "./maebox/index.js";
     const canvas = document.getElementById('audioCanvas');
     const playButton = document.getElementById('playButton');
     const frequencySlider = document.getElementById('frequencySlider');
+    const gainSlider = document.getElementById('gainSlider');
     const volumeSlider = document.getElementById('volumeSlider');
     const frequencyDisplay = document.getElementById('frequencyDisplay');
     const updateFrequencyDisplay = document.getElementById('updateFrequencyDisplay');
@@ -16,6 +17,11 @@ import * as maebox from "./maebox/index.js";
     frequencySlider.max = 127;
     frequencySlider.step = 1;
     frequencySlider.value = 69; // Start at A440
+
+    gainSlider.min = 0;
+    gainSlider.max = 100;
+    gainSlider.step = 1;
+    gainSlider.value = 100; // 0.5 volume
 
     volumeSlider.min = 0;
     volumeSlider.max = 100;
@@ -37,11 +43,18 @@ import * as maebox from "./maebox/index.js";
         frequencyDisplay.textContent = `Oscillator Frequency: ${freq.toFixed(2)} Hz`;
     });
 
+    // Update gain on slider change
+    gainSlider.addEventListener('input', () => {
+        let gain = parseInt(gainSlider.value);
+        audioEngine.gain = gain * 0.01;
+        //gainDisplay.textContent = `Oscillator Frequency: ${gain.toFixed(2)} Hz`;
+    });
+
     // Update volume on slider change
     volumeSlider.addEventListener('input', () => {
         let vol = parseInt(volumeSlider.value);
         audioEngine.vol = vol * 0.01;
-        //volumeDisplay.textContent = `Oscillator Frequency: ${freq.toFixed(2)} Hz`;
+        //volumeDisplay.textContent = `Oscillator Frequency: ${vol.toFixed(2)} Hz`;
     });
 
     var bodyStyles = window.getComputedStyle(document.body);
