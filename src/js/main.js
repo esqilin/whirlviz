@@ -1,11 +1,10 @@
 
-import * as Audio from "./maebox/audio/index.js";
-import * as Visual from "./maebox/visual/index.js";
+import * as maebox from "./maebox/index.js";
 
 
 (function () {
 
-    const audioEngine = new Audio.Engine();
+    const audioEngine = new maebox.Audio.Engine();
     const canvas = document.getElementById('audioCanvas');
     const playButton = document.getElementById('playButton');
     const frequencySlider = document.getElementById('frequencySlider');
@@ -33,12 +32,12 @@ import * as Visual from "./maebox/visual/index.js";
     // Update frequency on slider change (half-tone steps)
     frequencySlider.addEventListener('input', () => {
         let midiIndex = parseInt(frequencySlider.value);
-        let freq = Audio.Utils.midiToFrequency(midiIndex);
+        let freq = maebox.Audio.Utils.midiToFrequency(midiIndex);
         audioEngine.freq = freq;
         frequencyDisplay.textContent = `Oscillator Frequency: ${freq.toFixed(2)} Hz`;
     });
 
-    // Update frequency on slider change (half-tone steps)
+    // Update volume on slider change
     volumeSlider.addEventListener('input', () => {
         let vol = parseInt(volumeSlider.value);
         audioEngine.vol = vol * 0.01;
@@ -49,7 +48,7 @@ import * as Visual from "./maebox/visual/index.js";
     var bgColor = bodyStyles.getPropertyValue('--dark-text');
     var fgColor = bodyStyles.getPropertyValue('--background-color');
 
-    let visualEngine = new Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
+    let visualEngine = new maebox.Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
     visualEngine.start(audioEngine.outSamples);
 
     requestAnimationFrame(function loop(time) {
@@ -58,6 +57,6 @@ import * as Visual from "./maebox/visual/index.js";
         visualEngine.render(time);
 
         requestAnimationFrame(loop);
-    })
+    });
 
 })();
