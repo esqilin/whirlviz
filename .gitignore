@@ -21,5 +21,6 @@ Thumbs.db
 *.log
 *.swp # Vim swap files
 *.swo # Vim swap files
+*.code-workspace
 
 notes.md

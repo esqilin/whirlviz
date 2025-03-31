@@ -2,6 +2,7 @@
 import * as Audio from "./maebox/audio/index.js";
 import * as Visual from "./maebox/visual/index.js";
 
+
 (function () {
 
     const audioEngine = new Audio.Engine();
@@ -18,10 +19,15 @@ import * as Visual from "./maebox/visual/index.js";
 
     // Basic Audio Processing
     const oscillator = audioEngine.newOscillator();
-    audioEngine.addSource(oscillator);
+    const delay = audioEngine.newDelay(oscillator, 1, 0.95);
+    const stereoMerger = audioEngine.newStereoMerger(oscillator, delay);
+    const analyser = audioEngine.newStereoAnalyser(stereoMerger);
+    audioEngine.addSource(stereoMerger);
 
     playButton.addEventListener('click', async () => {
-        await audioEngine.start();
+        if (await audioEngine.start()) {
+            oscillator.start();
+        }
 
         let isMuted = audioEngine.toggleMuted();
         playButton.textContent = isMuted ? "Play" : "Stop";
@@ -40,10 +46,10 @@ import * as Visual from "./maebox/visual/index.js";
     var fgColor = bodyStyles.getPropertyValue('--background-color');
 
     let visualEngine = new Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
-    visualEngine.start(audioEngine.outSamples);
+    visualEngine.start(analyser.outSamples);
 
     requestAnimationFrame(function loop(time) {
-        audioEngine.fetchSamples();
+        analyser.fetchSamples();
 
         visualEngine.render(time);
 

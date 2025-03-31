@@ -31,16 +31,19 @@ class Oscillator extends Node {
     }
 
     constructor(ctx, type = WAVEFORMS.Sine, frequency = 440.0) {
-        super(ctx);
+        super();
 
         this.#ctx = ctx;
         this.#osc = ctx.audioContext.createOscillator();
         this.#osc.type = type;
         this.#osc.frequency.value = frequency;
     }
-    
+
     connect(dest) {
         this.#osc.connect(dest);
+    }
+
+    start() {
         this.#osc.start();
     }
 

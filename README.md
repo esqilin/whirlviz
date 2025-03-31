@@ -21,7 +21,7 @@ The project is still at a very early stage of its development, the instructions 
 1.  Clone the repository: `git clone https://github.com/esqilin/whirlviz`
 2.  Navigate to the project directory: `cd whirlviz`
 3.  Install dependencies: `npm install` or `yarn install`
-4.  Run the development server: `npm run dev` or `yarn run dev`
+4.  Run the development server: `npm run start` or `yarn run start`
 5.  Open your browser and go to `http://localhost:9773`
 
 ## License
