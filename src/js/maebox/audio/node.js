@@ -1,12 +1,15 @@
 
 class Node {
 
-    constructor() {
-        //empty
+    get now() {
+        return this.context.audioContext.currentTime;
     }
 
-    // dest must be a WebAudio node
-    connect(dest) {}
+    constructor(context) {
+        this.context = context;
+        this.node = null;
+    }
+
 }
 
 export { Node };

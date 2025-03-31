@@ -4,20 +4,16 @@ import { Node } from './node.js';
 
 class StereoMerger extends Node {
 
-    #merger;
-
-    constructor(ctx, lNode, rNode) {
+    constructor(ctx) {
         super();
 
         const aCtx = ctx.audioContext;
-        this.#merger = aCtx.createChannelMerger(2, { numberOfOutputs: 2 });
-
-        lNode.connect(this.#merger, 0, 0);
-        rNode.connect(this.#merger, 0, 1);
+        this.node = aCtx.createChannelMerger(2, { numberOfOutputs: 2 });
     }
 
-    connect(dest) {
-        this.#merger.connect(dest);
+    connectInputs(lNode, rNode) {
+        lNode.connect(this.node, 0, 0);
+        rNode.connect(this.node, 0, 1);
     }
 
 }

@@ -16,35 +16,23 @@ class Oscillator extends Node {
         return WAVEFORMS;
     }
 
-    #ctx;
-    #osc;
-
     get frequency() {
-        return this.#osc.frequency.value;
+        return this.node.frequency.value;
     }
 
     /**
      * @param {number} val
      */
     set frequency(val) {
-        this.#osc.frequency.exponentialRampToValueAtTime(val, this.#ctx.now + this.#ctx.freqRampTime);
+        this.node.frequency.exponentialRampToValueAtTime(val, this.now + this.context.freqRampTime);
     }
 
     constructor(ctx, type = WAVEFORMS.Sine, frequency = 440.0) {
-        super();
+        super(ctx);
 
-        this.#ctx = ctx;
-        this.#osc = ctx.audioContext.createOscillator();
-        this.#osc.type = type;
-        this.#osc.frequency.value = frequency;
-    }
-
-    connect(dest) {
-        this.#osc.connect(dest);
-    }
-
-    start() {
-        this.#osc.start();
+        this.node = ctx.audioContext.createOscillator();
+        this.node.type = type;
+        this.node.frequency.value = frequency;
     }
 
 }

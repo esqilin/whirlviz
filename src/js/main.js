@@ -9,6 +9,7 @@ import * as Visual from "./maebox/visual/index.js";
     const canvas = document.getElementById('audioCanvas');
     const playButton = document.getElementById('playButton');
     const frequencySlider = document.getElementById('frequencySlider');
+    const volumeSlider = document.getElementById('volumeSlider');
     const frequencyDisplay = document.getElementById('frequencyDisplay');
     const updateFrequencyDisplay = document.getElementById('updateFrequencyDisplay');
 
@@ -17,17 +18,13 @@ import * as Visual from "./maebox/visual/index.js";
     frequencySlider.step = 1;
     frequencySlider.value = 69; // Start at A440
 
-    // Basic Audio Processing
-    const oscillator = audioEngine.newOscillator();
-    const delay = audioEngine.newDelay(oscillator, 1, 0.95);
-    const stereoMerger = audioEngine.newStereoMerger(oscillator, delay);
-    const analyser = audioEngine.newStereoAnalyser(stereoMerger);
-    audioEngine.addSource(stereoMerger);
+    volumeSlider.min = 0;
+    volumeSlider.max = 100;
+    volumeSlider.step = 1;
+    volumeSlider.value = 50; // 0.5 volume
 
     playButton.addEventListener('click', async () => {
-        if (await audioEngine.start()) {
-            oscillator.start();
-        }
+        await audioEngine.start();
 
         let isMuted = audioEngine.toggleMuted();
         playButton.textContent = isMuted ? "Play" : "Stop";
@@ -37,8 +34,15 @@ import * as Visual from "./maebox/visual/index.js";
     frequencySlider.addEventListener('input', () => {
         let midiIndex = parseInt(frequencySlider.value);
         let freq = Audio.Utils.midiToFrequency(midiIndex);
-        oscillator.frequency = freq;
+        audioEngine.freq = freq;
         frequencyDisplay.textContent = `Oscillator Frequency: ${freq.toFixed(2)} Hz`;
+    });
+
+    // Update frequency on slider change (half-tone steps)
+    volumeSlider.addEventListener('input', () => {
+        let vol = parseInt(volumeSlider.value);
+        audioEngine.vol = vol * 0.01;
+        //volumeDisplay.textContent = `Oscillator Frequency: ${freq.toFixed(2)} Hz`;
     });
 
     var bodyStyles = window.getComputedStyle(document.body);
@@ -46,10 +50,10 @@ import * as Visual from "./maebox/visual/index.js";
     var fgColor = bodyStyles.getPropertyValue('--background-color');
 
     let visualEngine = new Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
-    visualEngine.start(analyser.outSamples);
+    visualEngine.start(audioEngine.outSamples);
 
     requestAnimationFrame(function loop(time) {
-        analyser.fetchSamples();
+        audioEngine.analyse();
 
         visualEngine.render(time);
 

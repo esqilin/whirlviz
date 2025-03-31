@@ -1,7 +1,6 @@
 
 class Engine {
 
-    #delayBuffer;
     #lastFrameTime;
     #frameCount;
     #ctx;
@@ -12,13 +11,8 @@ class Engine {
     
     constructor(canvas, audioSampleRate, bgColor, fgColor) {
         //defaults
-        // TODO: control from UI
-        let delayLength = 0.015; // should be more than 10ms
         const lineWidth = 1;
 
-        let nDelaySamples = Math.round(delayLength * audioSampleRate);
-
-        this.#delayBuffer = new Array(nDelaySamples).fill(0);
         this.#lastFrameTime = 0;
         this.#frameCount = 0;
 
@@ -68,15 +62,11 @@ class Engine {
 
         for (let i = 0; i < this.#dataArray[0].length; i++) {
             // Centering and Scaling
-            let currentAmplitude = this.#dataArray[0][i] * minDim * 0.25;
-            let currentAmp2 = this.#dataArray[1][i] * minDim * 0.25;
-
-            // Calculate delayed amplitude
-            this.#delayBuffer.push(currentAmplitude);
-            const delayedAmplitude = this.#delayBuffer.shift();
+            let lAmplitude = this.#dataArray[0][i] * minDim * 0.5;
+            let rAmplitude = this.#dataArray[1][i] * minDim * 0.5;
 
             // Draw point
-            this.#ctx.lineTo(currentAmplitude + this.#cw / 2, delayedAmplitude + this.#ch / 2);
+            this.#ctx.lineTo(lAmplitude + this.#cw / 2, rAmplitude + this.#ch / 2);
         }
 
         this.#ctx.stroke();
