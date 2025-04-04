@@ -21,15 +21,41 @@ import * as maebox from "./maebox/index.js";
     gainSlider.min = 0;
     gainSlider.max = 100;
     gainSlider.step = 1;
-    gainSlider.value = 100; // 0.5 volume
+    gainSlider.value = 50; // 0.5 gain
 
     volumeSlider.min = 0;
     volumeSlider.max = 100;
     volumeSlider.step = 1;
     volumeSlider.value = 50; // 0.5 volume
 
+    function setupVisuals() {
+        var bodyStyles = window.getComputedStyle(document.body);
+        var bgColor = bodyStyles.getPropertyValue('--dark-text');
+        var fgColor = bodyStyles.getPropertyValue('--background-color');
+    
+        let visualEngine = new maebox.Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
+        visualEngine.start(audioEngine.outSamples);
+    
+        requestAnimationFrame(function loop(time) {
+            audioEngine.analyse();
+    
+            visualEngine.render(time);
+    
+            requestAnimationFrame(loop);
+        });
+    }
+
     playButton.addEventListener('click', async () => {
-        await audioEngine.start();
+        let isSetup = await audioEngine.start();
+        if (!isSetup) {
+            console.error('Something went wrong during audio engine setup.');
+            return;
+        }
+
+        gainSlider.dispatchEvent(new Event('input'));
+        volumeSlider.dispatchEvent(new Event('input'));
+
+        setupVisuals();
 
         let isMuted = audioEngine.toggleMuted();
         playButton.textContent = isMuted ? "Play" : "Stop";
@@ -55,21 +81,6 @@ import * as maebox from "./maebox/index.js";
         let vol = parseInt(volumeSlider.value);
         audioEngine.vol = vol * 0.01;
         //volumeDisplay.textContent = `Oscillator Frequency: ${vol.toFixed(2)} Hz`;
-    });
-
-    var bodyStyles = window.getComputedStyle(document.body);
-    var bgColor = bodyStyles.getPropertyValue('--dark-text');
-    var fgColor = bodyStyles.getPropertyValue('--background-color');
-
-    let visualEngine = new maebox.Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
-    visualEngine.start(audioEngine.outSamples);
-
-    requestAnimationFrame(function loop(time) {
-        audioEngine.analyse();
-
-        visualEngine.render(time);
-
-        requestAnimationFrame(loop);
     });
 
 })();
