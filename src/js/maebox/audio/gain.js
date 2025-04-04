@@ -8,13 +8,13 @@ class Gain extends Node {
      * @param {number} val
      */
     set gain(val) {
-        let decay = this.context.gainRampTime;
+        let rampTime = this.context.gainRampTime;
 
         // // start from where we actually are
         this.node.gain.cancelScheduledValues(this.now);
         this.node.gain.setValueAtTime(this.node.gain.value, this.now);
 
-        this.node.gain.linearRampToValueAtTime(val, this.now + decay);
+        this.node.gain.linearRampToValueAtTime(val, this.now + rampTime);
     }
 
     constructor(ctx) {

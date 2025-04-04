@@ -64,9 +64,7 @@ import * as maebox from "./maebox/index.js";
     // Update frequency on slider change (half-tone steps)
     frequencySlider.addEventListener('input', () => {
         let midiIndex = parseInt(frequencySlider.value);
-        let freq = maebox.Audio.Utils.midiToFrequency(midiIndex);
-        audioEngine.freq = freq;
-        frequencyDisplay.textContent = `Oscillator Frequency: ${freq.toFixed(2)} Hz`;
+        audioEngine.playNote(midiIndex, 127);
     });
 
     // Update gain on slider change

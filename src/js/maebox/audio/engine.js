@@ -6,13 +6,14 @@ import { Gain } from './gain.js';
 import { StereoMerger } from './stereoMerger.js'
 import { StereoAnalyser } from './stereoAnalyser.js';
 import { WaveTerrainDistortion } from './waveTerrainDistortion.js';
+import { GeneratorPool } from './generatorPool.js';
 import { Context } from './context.js';
 
 
 class Engine {
 
     #ctx;
-    #osc;
+    #generatorPool;
     #gain;
     #wtd;
     #analyser;
@@ -23,16 +24,9 @@ class Engine {
     /**
      * @param {number} val
      */
-    set freq(val) {
-        this.#osc.frequency = val;
-    }
-
-    /**
-     * @param {number} val
-     */
     set gain(val) {
         this.#gainVal = val;
-        this.#gain.gain = this.#gainVal;
+        this.#gain.gain = this.#gainVal * this.#gainVal;
     }
 
     /**
@@ -73,16 +67,15 @@ class Engine {
             return false;
         }
 
-        this.#osc = new Oscillator(this.#ctx);
+        this.#generatorPool = new GeneratorPool(this.#ctx, 3);
         const delay = new Delay(this.#ctx, Math.ceil(delayTime), delayTime);
-        const merger = new StereoMerger(this.#ctx, this.#osc, delay);
-        const splitter = this.#ctx.audioContext.createChannelSplitter(2);
+        const merger = new StereoMerger(this.#ctx, this.#generatorPool.node, delay.node);
         this.#gain = new Gain(this.#ctx);
         this.#volume = new Gain(this.#ctx);
         this.#analyser = new StereoAnalyser(this.#ctx);
 
         // make connections
-        this.#osc.node.connect(this.#gain.node);
+        this.#generatorPool.node.connect(this.#gain.node);
         this.#gain.node.connect(this.#wtd.node, 0, 0);
         this.#wtd.node.connect(delay.node, 0);
         delay.node.connect(this.#wtd.node, 0, 1);
@@ -108,11 +101,16 @@ class Engine {
         }
 
         if (ctx.state === 'suspended') {
-            this.#osc.node.start();
+            this.#generatorPool.start();
             await ctx.resume();
         }
 
         return true;
+    }
+
+    playNote(midiIndex, velocity) {
+        this.#generatorPool.reset();
+        this.#generatorPool.noteOn(midiIndex, velocity);
     }
 
     toggleMuted() {
