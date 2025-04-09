@@ -2,12 +2,12 @@
 import { Node } from './node.js';
 
 
-const WAVEFORMS = {
+const WAVEFORMS = Object.freeze({
     Sine: 'sine',
     Square: 'square',
     Triangle: 'triangle',
     Sawtooth: 'sawtooth'
-}
+});
 
 
 class Oscillator extends Node {

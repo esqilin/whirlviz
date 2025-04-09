@@ -21,6 +21,8 @@ class GeneratorPool extends Node {
         for (let i = 0; i < this.allNotes.length; i++) {
             this.allNotes[i] = null;
         }
+
+        this.isRunning = false;
     }
 
     start() {

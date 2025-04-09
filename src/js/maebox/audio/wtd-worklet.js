@@ -9,7 +9,15 @@ class WtdProcessor extends AudioWorkletProcessor {
     }
 
     lookupTerrain(x, y) {
-        return -x * Math.sin(Math.sqrt(Math.abs(x))) - y * Math.sin(Math.sqrt(Math.abs(y)));
+        if (Math.abs(x) > 1.0 || Math.abs(y) > 1.0) {
+            return 0.0;
+        }
+
+        x *= 10.0;
+        y *= 10.0;
+        let z = -(1/12) * (x * Math.sin(Math.sqrt(Math.abs(x))) + y * Math.sin(Math.sqrt(Math.abs(y))))
+
+        return Math.abs(z) > 1.0 ? Math.sign(z) : z;
     }
 
     process(inputs, outputs, params) {
@@ -39,7 +47,10 @@ class WtdProcessor extends AudioWorkletProcessor {
         for (let k = 0; k < x.length; k++) {
             // const i = Math.floor(((x[k] + 1) / 2) * (this.waveTerrain.length - 1));
             // const j = Math.floor(((y[k] + 1) / 2) * (this.waveTerrain.length - 1));
-            z[k] = this.lookupTerrain(x[k], y[k]); // TODO: lookup(i,j)
+            z[k] = this.lookupTerrain(1.0 * x[k], 1.0 * y[k]);
+            if (Math.abs(z[k]) > 1.0) {
+                console.debug('WTD output out of range:', z[k]);
+            }
         }
 
         return true;

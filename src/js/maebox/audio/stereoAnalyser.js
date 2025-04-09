@@ -2,9 +2,28 @@
 import { Node } from './node.js';
 
 
+class Analyser extends Node {
+
+    constructor(ctx) {
+        super(ctx);
+
+        const nFft = 2048;
+
+        this.node = ctx.audioContext.createAnalyser();
+        this.node.fftSize = nFft;
+
+        this.data = new Float32Array(nFft);
+    }
+
+    fetch() {
+        this.node.getFloatTimeDomainData(this.data);
+    }
+
+}
+
+
 class StereoAnalyser extends Node {
 
-    data;
     #splitter;
     #analysers;
 
@@ -44,4 +63,4 @@ class StereoAnalyser extends Node {
 
 }
 
-export { StereoAnalyser };
+export { StereoAnalyser, Analyser };

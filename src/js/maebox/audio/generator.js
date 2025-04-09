@@ -10,9 +10,9 @@ class Generator {
         this.src = new Oscillator(ctx);
         this.gain = new Gain(ctx);
 
-        this.src.node.connect(this.gain.node);
+        this.off();
 
-        this.isOn = false;
+        this.src.node.connect(this.gain.node);
     }
 
     start() {

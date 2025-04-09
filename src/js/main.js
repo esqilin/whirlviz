@@ -1,22 +1,23 @@
 
-import * as maebox from "./maebox/index.js";
+import * as maebox from './maebox/index.js';
+import * as whirlwiz from './controlState.js';
 
 
 (function () {
 
-    const audioEngine = new maebox.Audio.Engine();
+    const logger = new maebox.Log.Log(200);
+    const consoleDiv = document.getElementById('log');
+    const logRelay = new maebox.Log.LogRelay(logger, consoleDiv);
+    const audioEngine = new maebox.Audio.Engine(logger);
     const canvas = document.getElementById('audioCanvas');
     const playButton = document.getElementById('playButton');
     const frequencySlider = document.getElementById('frequencySlider');
     const gainSlider = document.getElementById('gainSlider');
     const volumeSlider = document.getElementById('volumeSlider');
-    const frequencyDisplay = document.getElementById('frequencyDisplay');
-    const updateFrequencyDisplay = document.getElementById('updateFrequencyDisplay');
+    const midiController = new maebox.Midi.MidiController(logger);
+    const controlState = new whirlwiz.ControlState();
 
-    frequencySlider.min = 0;
-    frequencySlider.max = 127;
-    frequencySlider.step = 1;
-    frequencySlider.value = 69; // Start at A440
+    let isAllSetup = false;
 
     gainSlider.min = 0;
     gainSlider.max = 100;
@@ -28,57 +29,134 @@ import * as maebox from "./maebox/index.js";
     volumeSlider.step = 1;
     volumeSlider.value = 50; // 0.5 volume
 
+    function setupMidi() {
+        try {
+            midiController.setup();
+        } catch (error) {
+            logger.error(error);
+            return false;
+        }
+
+        let noteOn = function (ch, note, vel) {
+            if (0 == ch) {
+                audioEngine.noteOn(note, vel);
+            } else {
+                logger.debug(`NoteOn (ch ${ch}, note ${note}, vel ${vel})`);
+            }
+        }
+
+        let noteOff = function (ch, note) {
+            if (0 == ch) {
+                audioEngine.noteOff(note);
+            } else {
+                logger.debug(`NoteOff (ch ${ch}, note ${note})`);
+            }
+        }
+
+        let control = function (ch, controller, val) {
+            switch (controller) {
+                case 27:
+                    controlState.setValue('audio.gain', val / 127.0);
+                    break;
+                case 28:
+                    controlState.setValue('audio.volume', val / 127.0);
+                    break;
+                default:
+                    logger.debug(`Control Change: Channel ${ch}, Controller ${controller}, Value ${val}`);
+            }
+        }
+
+        midiController.addHandler((event) => {
+            switch (event.type) {
+                case 'noteOn':
+                    noteOn(event.channel, event.note, event.velocity);
+                    break;
+                case 'noteOff':
+                    noteOff(event.channel, event.note, event.velocity);
+                    break;
+                case 'control':
+                    control(event.channel, event.controller, event.value);
+                    break;
+                default:
+                    logger.warn(`Unknown: ${Array.from(event.data).join(', ')}`);
+            }
+
+        });
+
+        return true;
+    }
+
     function setupVisuals() {
-        var bodyStyles = window.getComputedStyle(document.body);
-        var bgColor = bodyStyles.getPropertyValue('--dark-text');
-        var fgColor = bodyStyles.getPropertyValue('--background-color');
+        let bodyStyles = window.getComputedStyle(document.body);
+        let bgColor = bodyStyles.getPropertyValue('--dark-background');
+        let fgColor = bodyStyles.getPropertyValue('--primary-color');
     
-        let visualEngine = new maebox.Visual.Engine(canvas, audioEngine.sampleRate, bgColor, fgColor);
-        visualEngine.start(audioEngine.outSamples);
+        let visualEngine = null;
+        try {
+            visualEngine = new maebox.Visual.Engine(canvas, bgColor, fgColor, logger);
+        } catch (error) {
+            logger.error(error);
+            return false;
+        }
+        let ret = visualEngine.start(audioEngine.outSamples);
     
         requestAnimationFrame(function loop(time) {
             audioEngine.analyse();
     
             visualEngine.render(time);
+            visualEngine.debugRender(time);
     
             requestAnimationFrame(loop);
         });
+
+        return ret;
+    }
+
+    function setupStateCallbacks() {
+        function onVolumeChange(val) {
+            audioEngine.volume = val;
+            volumeSlider.value = Math.round(val * 100);
+        }    
+        function onGainChange(val) {
+            audioEngine.gain = val;
+            gainSlider.value = Math.round(val * 100);
+        }
+
+        controlState.listen('audio.gain', onGainChange);
+        controlState.listen('audio.volume', onVolumeChange);
+
+        return true;
     }
 
     playButton.addEventListener('click', async () => {
-        let isSetup = await audioEngine.start();
-        if (!isSetup) {
-            console.error('Something went wrong during audio engine setup.');
-            return;
+        if (!isAllSetup) {
+            isAllSetup = await audioEngine.start();
+            if (!isAllSetup) {
+                console.error('Something went wrong during audio engine setup.');
+                return;
+            }
+
+            isAllSetup = isAllSetup && setupVisuals() && setupMidi()
+                && setupStateCallbacks();
         }
 
         gainSlider.dispatchEvent(new Event('input'));
         volumeSlider.dispatchEvent(new Event('input'));
 
-        setupVisuals();
-
         let isMuted = audioEngine.toggleMuted();
         playButton.textContent = isMuted ? "Play" : "Stop";
-    });
-
-    // Update frequency on slider change (half-tone steps)
-    frequencySlider.addEventListener('input', () => {
-        let midiIndex = parseInt(frequencySlider.value);
-        audioEngine.playNote(midiIndex, 127);
     });
 
     // Update gain on slider change
     gainSlider.addEventListener('input', () => {
         let gain = parseInt(gainSlider.value);
-        audioEngine.gain = gain * 0.01;
-        //gainDisplay.textContent = `Oscillator Frequency: ${gain.toFixed(2)} Hz`;
+        controlState.setValue('audio.gain', gain * 0.01);
     });
 
     // Update volume on slider change
     volumeSlider.addEventListener('input', () => {
         let vol = parseInt(volumeSlider.value);
-        audioEngine.vol = vol * 0.01;
-        //volumeDisplay.textContent = `Oscillator Frequency: ${vol.toFixed(2)} Hz`;
+        controlState.setValue('audio.volume', vol * 0.01);
     });
 
 })();
