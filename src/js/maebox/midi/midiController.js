@@ -1,11 +1,55 @@
 
+const EVENTTYPES = Object.freeze({
+    NoteOff: 0,
+    NoteOn: 1,
+    Control: 2,
+    Unknown: 3
+});
+
+
 class MidiController {
+
+    static get EVENTTYPES() {
+        return EVENTTYPES;
+    }
 
     constructor(logger) {
         this.logger = logger;
     }
 
-    _parseMessage(message) {
+    static _triggerMessage(detail) {
+        const customEvent = new CustomEvent('midiMessage', { detail: detail });
+        window.dispatchEvent(customEvent);
+    }
+
+    static triggerNoteOff(note, channel = 0) {
+        MidiController._triggerMessage({
+            type: EVENTTYPES.NoteOff,
+            channel: channel,
+            note: note,
+            velocity: 0
+        });
+    }
+
+    static triggerNoteOn(note, velocity, channel = 0) {
+        MidiController._triggerMessage({
+            type: EVENTTYPES.NoteOn,
+            channel: channel,
+            note: note,
+            velocity: velocity
+        });
+    }
+
+    static triggerControl(controller, value, channel = 0) {
+        MidiController._triggerMessage({
+            type: EVENTTYPES.Control,
+            channel: channel,
+            controller: controller,
+            value: value
+        });
+    }
+
+    onMessage(message) {
         const data = message.data;
         const status = data[0] >> 4; // Get the status (e.g., 8, 9, 11)
         const channel = data[0] & 0x0F; // Get the channel (0-15)
@@ -14,20 +58,17 @@ class MidiController {
 
         switch (status) {
             case 0x08: // Note Off
-                return { type: 'noteOff', channel: channel, note: note, velocity: velocity };
+                MidiController.triggerNoteOff(note, channel);
+                break;
             case 0x09: // Note On
-                return { type: 'noteOn', channel: channel, note: note, velocity: velocity };
+                MidiController.triggerNoteOn(note, velocity, channel);
+                break;
             case 0x0B: // Control Change
-                return { type: 'control', channel: channel, controller: note, value: velocity };
+                MidiController.triggerControl(note, velocity, channel);
+                break;
             default:
-                return { type: 'unknown', data: data };
+                MidiController._triggerMessage({ type: 'unknown', data: data });
         }
-    }
-
-    onMessage(message) {
-        const event = this._parseMessage(message);
-        const customEvent = new CustomEvent('midiMessage', { detail: event });
-        window.dispatchEvent(customEvent);
     }
 
     onSuccess(access) {

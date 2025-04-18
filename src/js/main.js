@@ -1,6 +1,7 @@
 
 import * as maebox from './maebox/index.js';
 import * as whirlwiz from './controlState.js';
+import { MidiController } from './maebox/midi/midiController.js';
 
 
 (function () {
@@ -11,11 +12,13 @@ import * as whirlwiz from './controlState.js';
     const audioEngine = new maebox.Audio.Engine(logger);
     const canvas = document.getElementById('audio-canvas');
     const playButton = document.getElementById('playButton');
-    const frequencySlider = document.getElementById('frequencySlider');
+    // const frequencySlider = document.getElementById('frequencySlider');
     const gainSlider = document.getElementById('gainSlider');
     const volumeSlider = document.getElementById('volumeSlider');
     const midiController = new maebox.Midi.MidiController(logger);
+    const keyController = new maebox.Keyboard.KeyController();
     const controlState = new whirlwiz.ControlState();
+    const midiMapper = new maebox.Midi.MidiMapper();
 
     let isAllSetup = false;
 
@@ -28,6 +31,27 @@ import * as whirlwiz from './controlState.js';
     volumeSlider.max = 100;
     volumeSlider.step = 1;
     volumeSlider.value = 50; // 0.5 volume
+
+    function setupKeyboardControls() {
+        keyController.setup();
+
+        keyController.addHandler({
+            onKeyDown: (key) => {
+                    const note = midiMapper.map(key);
+                    if (note) {
+                        MidiController.triggerNoteOn(note, 128);
+                    }
+                },
+            onKeyUp: (key) => {
+                    const note = midiMapper.map(key);
+                    if (note) {
+                        MidiController.triggerNoteOff(note);
+                    }
+                }
+        });
+
+        return true;
+    }
 
     function setupMidi() {
         try {
@@ -66,15 +90,16 @@ import * as whirlwiz from './controlState.js';
             }
         }
 
+        const eType = MidiController.EVENTTYPES;
         midiController.addHandler((event) => {
             switch (event.type) {
-                case 'noteOn':
+                case eType.NoteOn:
                     noteOn(event.channel, event.note, event.velocity);
                     break;
-                case 'noteOff':
-                    noteOff(event.channel, event.note, event.velocity);
+                case eType.NoteOff:
+                    noteOff(event.channel, event.note);
                     break;
-                case 'control':
+                case eType.Control:
                     control(event.channel, event.controller, event.value);
                     break;
                 default:
@@ -137,7 +162,7 @@ import * as whirlwiz from './controlState.js';
             }
 
             isAllSetup = isAllSetup && setupVisuals() && setupMidi()
-                && setupStateCallbacks();
+                && setupStateCallbacks() && setupKeyboardControls();
         }
 
         gainSlider.dispatchEvent(new Event('input'));

@@ -24,6 +24,12 @@ The project is still at a very early stage of its development, the instructions 
 4.  Run the development server: `npm run start` or `yarn run start`
 5.  Open your browser and go to `http://localhost:9773`
 
+## USAGE
+
+You can connect any MIDI device supported by your operating system.
+The computer keyboard can be used too, but at this time, only the German layout is supported:
+Keys Q through P and Y through M are the white piano keys C4 - E6. The black keys are the rows above them.
+
 ## License
 
 This project is licensed under the [ISC License](LICENSE).
