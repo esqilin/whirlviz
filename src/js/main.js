@@ -9,7 +9,7 @@ import * as whirlwiz from './controlState.js';
     const consoleDiv = document.getElementById('log');
     const logRelay = new maebox.Log.LogRelay(logger, consoleDiv);
     const audioEngine = new maebox.Audio.Engine(logger);
-    const canvas = document.getElementById('audioCanvas');
+    const canvas = document.getElementById('audio-canvas');
     const playButton = document.getElementById('playButton');
     const frequencySlider = document.getElementById('frequencySlider');
     const gainSlider = document.getElementById('gainSlider');

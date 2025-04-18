@@ -1,4 +1,7 @@
 
+import { ParticleCloud } from './particleCloud.js';
+
+
 function hexToRgbFloat(hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
@@ -15,7 +18,7 @@ function hexToRgbFloat(hex) {
         : null;
 }
 
-class Engine {
+export class Engine {
 
     #lastFrameTime;
     #frameCount;
@@ -29,15 +32,24 @@ class Engine {
 
     constructor(canvas, bgColor, fgColor, logger) {
         //defaults
-        const lineWidth = 1;
+        const particleLifetime = 2.0;
+        const log2nParticles = 14;
 
         this.#lastFrameTime = 0;
-        this.#frameCount = 0;
+        // this.#frameCount = 0;
+        this._particles = new ParticleCloud(log2nParticles, particleLifetime);
+        this._particleAgeStep = 1.0 / 60.0; // TODO: compute fps and update accordingly
 
         this.#ctx = canvas.getContext('webgl');
         if (!this.#ctx) {
             throw new Error('WebGL not supported');
         }
+
+        // setup colors
+        this._bgColor = bgColor;
+        this._fgColor = fgColor;
+        this.#bgColor = hexToRgbFloat(bgColor);
+        this.#fgColor = hexToRgbFloat(fgColor); // TODO: doesn't need to be an object property
 
         // Set Canvas resolution
         const dpr = window.devicePixelRatio || 1;
@@ -48,32 +60,33 @@ class Engine {
         this.#ch = canvas.height;
 
         const vertexShaderSource = `
-  attribute vec4 a_particleData; // x, y, age, lifetime
+attribute vec4 a_particleData; // x, y, ttl
 
-  uniform float u_time;
-  varying float v_alpha;
+uniform float u_time;
+uniform float u_lifetime;
+varying float v_alpha;
 
-  void main() {
-    float age = a_particleData.z;
-    float lifetime = a_particleData.w;
-    vec2 pos = a_particleData.xy;
+void main() {
+    float ttl = a_particleData.z;
 
-    if (age < lifetime) {
-      gl_Position = vec4(pos, 0.0, 1.0);
-      v_alpha = 1.0 - age / lifetime;
+    if (ttl > 0.0) {
+        vec2 basePos = a_particleData.xy;
+        vec2 pos = basePos;
+        v_alpha = ttl / u_lifetime;
+        pos = pos + (1.0 - v_alpha);
+        gl_Position = vec4(pos, 0.0, 1.0);
     } else {
-      gl_Position = vec4(10000.0, 10000.0, 0.0, 1.0);
-      v_alpha = 0.0;
+        gl_Position = vec4(10000.0, 10000.0, 0.0, 1.0);
+        v_alpha = 0.0;
     }
     gl_PointSize = 1.0;
-  }
-`;
+}`;
 
         const fragmentShaderSource = `
   precision mediump float;
 
-  varying float v_alpha;
   uniform vec4 u_color;
+  varying float v_alpha;
 
   void main() {
     gl_FragColor = vec4(u_color.xyz, v_alpha);
@@ -86,14 +99,18 @@ class Engine {
         const vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vertexShaderSource);
         gl.compileShader(vertexShader);
-        // TODO: check gl.getShaderParameter(shader, gl.COMPILE_STATUS)
-        logger.debug(gl.getShaderInfoLog(vertexShader));
+        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+            const err = gl.getShaderInfoLog(vertexShader);
+            logger.debug(`Error compiling vertex shader: ${err}`);
+        }
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         gl.shaderSource(fragmentShader, fragmentShaderSource);
         gl.compileShader(fragmentShader);
-        // TODO: check gl.getShaderParameter(shader, gl.COMPILE_STATUS)
-        logger.debug(gl.getShaderInfoLog(fragmentShader));
+        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+            const err = gl.getShaderInfoLog(fragmentShader);
+            logger.debug(`Error compiling fragment shader: ${err}`);
+        }
 
         const program = gl.createProgram();
         gl.attachShader(program, vertexShader);
@@ -102,22 +119,26 @@ class Engine {
         gl.useProgram(program);
 
         // Get attribute locations
-        // const positionLocation = gl.getAttribLocation(program, "a_position");
+        const xSampleLoc = gl.getAttribLocation(program, "a_xs");
+        const ySampleLoc = gl.getAttribLocation(program, "a_ys");
         const particleDataLoc = gl.getAttribLocation(program, "a_particleData");
         this._timeLoc = gl.getUniformLocation(program, "u_time");
-        this._colorLoc = gl.getUniformLocation(program, "u_color");
+        const colorLoc = gl.getUniformLocation(program, "u_color");
+        const lifetimeLoc = gl.getUniformLocation(program, "u_lifetime");
 
         this._particleDataBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this._particleDataBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, this._particles.data, gl.DYNAMIC_DRAW);
 
+        // gl.enableVertexAttribArray(xSampleLoc);
+        // gl.vertexAttribPointer(xSampleLoc, 1, gl.FLOAT, false, 0, 0);
+        // gl.enableVertexAttribArray(xSampleLoc);
+        // gl.vertexAttribPointer(ySampleLoc, 1, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(particleDataLoc);
-        gl.vertexAttribPointer(particleDataLoc, 4, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(particleDataLoc, this._particles.nFeatures, gl.FLOAT, false, 0, 0);
 
-        // setup colors
-        this._bgColor = bgColor;
-        this._fgColor = fgColor;
-        this.#bgColor = hexToRgbFloat(bgColor);
-        this.#fgColor = hexToRgbFloat(fgColor);
+        gl.uniform4f(colorLoc, this.#fgColor.r, this.#fgColor.g, this.#fgColor.b, 1.0);
+        gl.uniform1f(lifetimeLoc, this._particles.lifetime);
 
         // ### debug visualization
 
@@ -139,11 +160,6 @@ class Engine {
     start(audioBuf) {
         this.#dataArray = audioBuf;
 
-        this._particleData = [];
-        this._lifetime = 2.0;
-        this._particleLimit = 10000;
-        this._bufferNeedsUpdate = true;
-
         this.logger.info('Visuals engine has been started.');
 
         return true;
@@ -155,22 +171,20 @@ class Engine {
         const xs = this.#dataArray[0];
         const ys = this.#dataArray[1];
         const bufferLength = xs.length;
-        const lifetime = this._lifetime;
         const minDim = Math.min(this.#cw, this.#ch);
         const xScale = minDim / this.#cw;
         const yScale = minDim / this.#ch;
-
-        let nParticles = this._particleData.length >> 2;
     
-        this.#frameCount++;
+        // this.#frameCount++;
         const deltaTime = time - this.#lastFrameTime;
+        this.#lastFrameTime = time;
 
-        if (deltaTime > 1000) { // Update frequency every second
-            this.#fps = this.#frameCount * 1000 / deltaTime;
-            this.#frameCount = 0;
-            this.#lastFrameTime = time;
-            // TODO: signal someone that there is a new frequency value
-        }
+        // if (deltaTime > 1000) { // Update frequency every second
+        //     this.#fps = this.#frameCount * 1000 / deltaTime;
+        //     this.#frameCount = 0;
+        //     this.#lastFrameTime = time;
+        //     // TODO: signal someone that there is a new frequency value
+        // }
 
         // set viewport to canvas size
         gl.viewport(0, 0, this.#cw, this.#ch);
@@ -182,43 +196,19 @@ class Engine {
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        // TODO: rethink this. array should always be the same
         for (let i = 0; i < bufferLength; i++) {
-            this._particleData.push(
-                xs[i] * xScale,
-                ys[i] * yScale,
-                0,
-                lifetime);
+            this._particles.placeAt(xs[i] * xScale, ys[i] * yScale);
         }
-        nParticles = this._particleData.length >> 2;
       
         // update instance data (age)
-        let age;
-        let j;
-        for (let i = 0; i < nParticles; i++) {
-            j = (i << 2) + 2;
-            age = this._particleData[j];
-            if (age < lifetime) {
-                this._particleData[j] += 0.016; // TODO: assuming 60 fps
-            }
-        }
+        this._particles.age(this._particleAgeStep);
 
-        while (nParticles > this._particleLimit) {
-            this._particleData.splice(0, 4);
-            nParticles--;
-            this._bufferNeedsUpdate = true;
-        }
+        gl.uniform1f(this._timeLoc, deltaTime / 1000);
 
-        if (this._bufferNeedsUpdate) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._particleDataBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._particleData), gl.DYNAMIC_DRAW);
-            this._bufferNeedsUpdate = false;
-        }
-      
-        gl.uniform1f(this._timeLoc, time / 1000);
-        gl.uniform4f(this._colorLoc, this.#fgColor.r, this.#fgColor.g, this.#fgColor.b, 1.0);
+        // bufferSubData is more efficient!
+        gl.bufferData(gl.ARRAY_BUFFER, this._particles.data, gl.DYNAMIC_DRAW);
 
-        gl.drawArrays(gl.POINTS, 0, nParticles);
+        gl.drawArrays(gl.POINTS, 0, this._particles.size);
 
         gl.disable(gl.BLEND);
     }
@@ -252,5 +242,3 @@ class Engine {
     }
 
 }
-
-export { Engine };

@@ -28,8 +28,10 @@
 /* ******************************************************************* */
 
 body {
+    margin: 0;
     background-color: var(--background-color);
     color: var(--primary-color);
+    height: 100%;
 }
 
 * {
@@ -37,26 +39,20 @@ body {
 }
 
 .main {
-    display: flex;          /* Enable flexbox */
-    flex-wrap: wrap;      /* Allow items to wrap to the next row */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 15px;
+    padding: 15px;
     width: 100%;
     height: 100vh;
-    align-items: center;    /* Vertically center items */
-    justify-content: center;  /* Horizontally center items */
-    gap: 5px;
 }
 
-.row {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    justify-content: space-around;
-    align-items: stretch;
-    gap: 5px;
-}
-
-.column {
-    flex: 1;              /* Each column takes equal space */
+.audio-canvas-container {
+    /* Span 2 rows and 2 columns */
+    grid-row: span 2;
+    grid-column: span 2;
+    background-color: #b0e0e6; /* A different color for item1 */
 }
 
 /* Media query for larger screens (e.g., tablets and desktops) */
@@ -77,7 +73,7 @@ h1 {
 canvas {
     background-color: var(--dark-background);
     width: 100%;
-    height: var(--visuals-height);
+    height: 100%;
 }
 
 /* ******************************************************************* */

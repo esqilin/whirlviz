@@ -4,34 +4,19 @@ title: Whirlviz
 ---
 
 <div class="main">
-    <div class="row">
-        <div class="column">
-            <canvas id="audioCanvas"></canvas>
-        </div>
-        <div class="column controls">
-            <button id="playButton" class="button">Play</button>
-            <input type="range" id="gainSlider" min="0" max="100" value="50">
-            <input type="range" id="volumeSlider" min="0" max="100" value="50">
-        </div>
-        <div class="column">
-            <div class="monitor"></div>
-        </div>
+    <div class="audio-canvas-container">
+        <canvas id="audio-canvas"></canvas>
     </div>
-    <div class="row">
-        <div class="column">
-            <canvas id="debugCanvas"></canvas>
-        </div>
-        <div class="column controls"></div>
-        <div class="column">
-            <div id="log" class="console"><!--
-                <div class="log">I want to mention something.</div>
-                <div class="info">You should know that this happened.</div>
-                <div class="error">Oops, there has been an error.</div>
-                <div class="warning">Caution, something might be broken.</div>
-                <div class="debug">There is a value here which you might want to inspect.</div>
-            --></div>
-        </div>
+    <div class="controls">
+        <button id="playButton" class="button">Play</button>
+        <input type="range" id="gainSlider" min="0" max="100" value="50">
+        <input type="range" id="volumeSlider" min="0" max="100" value="50">
     </div>
+    <div id="log" class="console"></div>
+    <div class="debug-canvas-container">
+        <canvas id="debugCanvas"></canvas>
+    </div>
+    <div class="monitor"></div>
 </div>
 
 <script type="module" src="js/main.js"></script>
