@@ -10,7 +10,7 @@ class Gain extends Node {
     set gain(val) {
         let rampTime = this.context.gainRampTime;
 
-        // // start from where we actually are
+        // start from where we actually are
         this.node.gain.cancelScheduledValues(this.now);
         this.node.gain.setValueAtTime(this.node.gain.value, this.now);
 
@@ -24,6 +24,15 @@ class Gain extends Node {
         // ramp from 0 to 1
         this.node.gain.setValueAtTime(0.0, this.now);
         this.gain = 1.0;
+    }
+
+    portamento(val) {
+        const gain = this.node.gain;
+
+        this.node.gain.cancelScheduledValues(this.now);
+        this.node.gain.setValueAtTime(this.node.gain.value, this.now);
+
+        this.node.gain.linearRampToValueAtTime(val, this.now + this.context.portamentoTime);
     }
 
 }

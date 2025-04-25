@@ -7,7 +7,7 @@ import { Node } from "./node.js"
 // and that have a certain frequency
 class GeneratorPool extends Node {
 
-    constructor(ctx, n) {
+    constructor(ctx, n, hasPortamento = false) {
         super(ctx);
 
         this.pool = new Array(n);
@@ -22,6 +22,9 @@ class GeneratorPool extends Node {
             this.allNotes[i] = null;
         }
 
+        this._hasPortamento = hasPortamento;
+        this._lastGenerator = null;
+
         this.isRunning = false;
     }
 
@@ -32,13 +35,23 @@ class GeneratorPool extends Node {
     }
 
     noteOn(midiIndex, velocity) {
+        let gen;
+
         if (this.pool.length === 0) {
-            return false; // no more generators available, do nothing
+            if (!this._hasPortamento) {
+                return false; // no more generators available, do nothing
+            }
+
+            gen = this.allNotes[this._lastGenerator];
+            this.allNotes[this._lastGenerator] = null;
+            gen.portamento(midiIndex, velocity);
+        } else {
+            gen = this.pool.pop();
+            gen.on(midiIndex, velocity);
         }
 
-        let gen = this.pool.pop();
-        gen.on(midiIndex, velocity);
         this.allNotes[midiIndex] = gen;
+        this._lastGenerator = midiIndex;
 
         return true;
     }

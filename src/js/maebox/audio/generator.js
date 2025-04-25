@@ -2,12 +2,13 @@
 import { Oscillator } from "./oscillator.js";
 import { Gain } from "./gain.js";
 import { Utils } from "./index.js";
+import { MidiController } from "../midi/midiController.js";
 
 
 class Generator {
 
-    constructor(ctx) {
-        this.src = new Oscillator(ctx);
+    constructor(ctx, shape = Oscillator.WAVEFORMS.Sine) {
+        this.src = new Oscillator(ctx, shape);
         this.gain = new Gain(ctx);
 
         this.off();
@@ -35,6 +36,17 @@ class Generator {
     off() {
         this.gain.gain = 0.0;
         this.isOn = false;
+    }
+
+    portamento(midiIndex, velocity) {
+        if (!this.isOn) {
+            this.on(midiIndex, velocity);
+            return;
+        }
+
+        let freq = Utils.midiToFrequency(midiIndex);
+        this.src.portamento(freq);
+        this.gain.gain = velocity / 127;
     }
 
 }

@@ -35,6 +35,13 @@ class Oscillator extends Node {
         this.node.frequency.value = frequency;
     }
 
+    portamento(val) {
+        const freq = this.node.frequency;
+        freq.cancelScheduledValues(this.now);
+        freq.setValueAtTime(this.now, freq.value);
+        freq.exponentialRampToValueAtTime(val, this.now + this.context.portamentoTime);
+    }
+
 }
 
 export { Oscillator };

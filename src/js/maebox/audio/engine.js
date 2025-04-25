@@ -1,5 +1,4 @@
 
-import { Oscillator } from './oscillator.js';
 import { Delay } from './delay.js';
 import { Gain } from './gain.js';
 import { Analyser } from './stereoAnalyser.js';
@@ -38,14 +37,15 @@ class Engine {
 
     constructor(logger) {
         //defaults
-        let latencyHint = 'playback';
-        let gainRampTime = 0.012;
-        let freqRampTime = 0.007;
-        let initialGain = 0.5;
+        const latencyHint = 'playback';
+        const gainRampTime = 0.012;
+        const freqRampTime = 0.007;
+        const portamentoTime = 0.7;
+        const initialGain = 0.5;
 
         this.logger = logger;
 
-        this._ctx = new Context(latencyHint, gainRampTime, freqRampTime);
+        this._ctx = new Context(latencyHint, gainRampTime, freqRampTime, portamentoTime);
         this._ctx.audioContext.addEventListener('statechange', (ev) => {
             logger.debug(`New audio context state: \`${ev.currentTarget.state}\``);
         });
@@ -55,7 +55,7 @@ class Engine {
     }
 
     async setup() {
-        const nPolyphony = 5;
+        const nPolyphony = 3;
         const delayTime = 0.032; // should be more than 0.01
         
         // setup audio nodes
@@ -66,7 +66,7 @@ class Engine {
             return false;
         }
 
-        this.#generatorPool = new GeneratorPool(this._ctx, nPolyphony);
+        this.#generatorPool = new GeneratorPool(this._ctx, nPolyphony, true);
         const delay = new Delay(this._ctx, Math.ceil(delayTime), delayTime);
         this.#gain = new Gain(this._ctx);
         this.#volume = new Gain(this._ctx);

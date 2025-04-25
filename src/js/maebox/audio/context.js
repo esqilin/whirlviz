@@ -4,6 +4,7 @@ class Context {
     #ctx;
     #gainRampTime;
     #freqRampTime;
+    #portamentoTime;
 
     get sampleRate() {
         return this.#ctx.sampleRate;
@@ -25,12 +26,17 @@ class Context {
         return this.#freqRampTime;
     }
 
-    constructor(latencyHint, gainRampTime, freqRampTime) {
+    get portamentoTime() {
+        return this.#portamentoTime;
+    }
+
+    constructor(latencyHint, gainRampTime, freqRampTime, portamentoTime) {
         let ctxOptions = { latencyHint: latencyHint };
 
         this.#ctx = new (window.AudioContext || window.webkitAudioContext)(ctxOptions);
         this.#gainRampTime = gainRampTime;
         this.#freqRampTime = freqRampTime;
+        this.#portamentoTime = portamentoTime;
     }
 
 }
