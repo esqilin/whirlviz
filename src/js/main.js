@@ -39,7 +39,7 @@ import { MidiController } from './maebox/midi/midiController.js';
             onKeyDown: (key) => {
                     const note = midiMapper.map(key);
                     if (note) {
-                        MidiController.triggerNoteOn(note, 128);
+                        MidiController.triggerNoteOn(note, 64);
                     }
                 },
             onKeyUp: (key) => {

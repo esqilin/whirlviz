@@ -73,7 +73,7 @@ void main() {
         vec2 basePos = a_particleData.xy;
         vec2 pos = basePos;
         v_alpha = ttl / u_lifetime;
-        pos = pos + (1.0 - v_alpha);
+        //pos = pos + (1.0 - v_alpha);
         gl_Position = vec4(pos, 0.0, 1.0);
     } else {
         gl_Position = vec4(10000.0, 10000.0, 0.0, 1.0);
